@@ -7,8 +7,8 @@
         "transfer": {
             "tokens": [
                 {
-                    "mint": "__PLACEHOLDER__",
-                    "account": "__PLACEHOLDER__",
+                    "mint": "3gr79GtS9FrmvT1FaK2UZEjL7zvNchorJFRzhZh9LxSD",
+                    "account": "3gr79GtS9FrmvT1FaK2UZEjL7zvNchorJFRzhZh9LxSD",
                     "decimals": 9,
                     "fee": 10000000
                 }

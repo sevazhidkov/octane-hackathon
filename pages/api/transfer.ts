@@ -1,11 +1,11 @@
 import { sendAndConfirmRawTransaction, Transaction } from '@solana/web3.js';
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import base58 from 'bs58';
-import { cache, connection, sha256, simulateRawTransaction, validateTransaction, validateTransfer } from '../core';
-import { cors, rateLimit } from '../middleware';
+import { cache, connection, sha256, simulateRawTransaction, validateTransaction, validateTransfer } from '../../src/core';
+import { cors, rateLimit } from '../../src/middleware';
 
 // Endpoint to pay for transactions with an SPL token transfer
-export default async function (request: VercelRequest, response: VercelResponse) {
+export default async function (request: NextApiRequest, response: NextApiResponse) {
     await cors(request, response);
     await rateLimit(request, response);
 

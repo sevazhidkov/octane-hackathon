@@ -8,3 +8,5 @@ keys
 !.env.example
 
 node_modules/
+
+.next
