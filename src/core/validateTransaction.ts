@@ -1,6 +1,6 @@
 import { Transaction, TransactionSignature } from '@solana/web3.js';
 import base58 from 'bs58';
-import config from '../../config.json';
+import getConfig from './config';
 import { connection } from './connection';
 import { ENV_FEE_PAYER, ENV_SECRET_KEYPAIR } from './env';
 
@@ -17,11 +17,11 @@ export async function validateTransaction(
     // Check Octane's RPC node for the blockhash to make sure it's synced and the fee is reasonable
     const feeCalculator = await connection.getFeeCalculatorForBlockhash(transaction.recentBlockhash);
     if (!feeCalculator.value) throw new Error('blockhash not found');
-    if (feeCalculator.value.lamportsPerSignature > config.lamportsPerSignature) throw new Error('fee too high');
+    if (feeCalculator.value.lamportsPerSignature > getConfig().lamportsPerSignature) throw new Error('fee too high');
 
     // Check the signatures for length, the primary signature, and secondary signature(s)
     if (!transaction.signatures.length) throw new Error('no signatures');
-    if (transaction.signatures.length > config.maxSignatures) throw new Error('too many signatures');
+    if (transaction.signatures.length > getConfig().maxSignatures) throw new Error('too many signatures');
 
     const [primary, ...secondary] = transaction.signatures;
     if (!primary.publicKey.equals(ENV_FEE_PAYER)) throw new Error('invalid fee payer pubkey');

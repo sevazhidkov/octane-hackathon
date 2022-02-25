@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+      "module": "commonjs",
+      "target": "es6",
+      "moduleResolution": "node",
+      "noEmit": true,
+      "strict": true,
+      "esModuleInterop": true,
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "typeRoots": [
+        "node_modules/@types",
+        "types"
+      ],
+      "lib": [
+        "dom",
+        "dom.iterable",
+        "esnext"
+      ],
+      "allowJs": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "incremental": true,
+      "jsx": "preserve"
+  },
+  "include": ["test/**/*.test.ts"]
+}

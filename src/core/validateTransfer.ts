@@ -7,7 +7,7 @@ import {
     isTransferInstruction,
 } from '@solana/spl-token';
 import { PublicKey, Transaction } from '@solana/web3.js';
-import config from '../../config.json';
+import getConfig from './config';
 import { connection } from './connection';
 
 // Define a lookup table of allowed token mint public keys to their config values
@@ -18,15 +18,18 @@ interface Token {
     fee: bigint;
 }
 
-const tokens = config.endpoints.transfer.tokens.reduce<Record<string, Token>>(function (tokens, token) {
-    tokens[token.mint] = {
-        mint: new PublicKey(token.mint),
-        account: new PublicKey(token.account),
-        decimals: token.decimals,
-        fee: BigInt(token.fee),
-    };
+function getTokenLookupTable(): Record<string, Token> {
+    const tokens = getConfig().endpoints.transfer.tokens.reduce<Record<string, Token>>(function (tokens, token) {
+        tokens[token.mint] = {
+            mint: new PublicKey(token.mint),
+            account: new PublicKey(token.account),
+            decimals: token.decimals,
+            fee: BigInt(token.fee),
+        };
+        return tokens;
+    }, {});
     return tokens;
-}, {});
+}
 
 // Check that a transaction contains a valid transfer to Octane's token account
 export async function validateTransfer(
@@ -53,7 +56,7 @@ export async function validateTransfer(
     if (account.amount < amount) throw new Error('source insufficient balance');
 
     // Check that the source account's mint is one of the accepted tokens
-    const token = tokens[account.mint.toBase58()];
+    const token = getTokenLookupTable()[account.mint.toBase58()];
     if (!token) throw new Error('invalid token');
 
     // Check that the instruction is going to pay the fee

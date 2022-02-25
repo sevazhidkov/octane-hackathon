@@ -1,11 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import config from '../../config.json';
-import { ENV_FEE_PAYER } from '../../src/core';
+import { ENV_FEE_PAYER, getConfig } from '../../src/core';
 import { rateLimit } from '../../src/middleware';
 //
 const body = {
     feePayer: ENV_FEE_PAYER.toBase58(),
-    ...config,
+    ...getConfig(),
 };
 
 // Endpoint to get Octane's configuration
