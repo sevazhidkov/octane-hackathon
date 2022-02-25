@@ -2,7 +2,7 @@ import { sendAndConfirmRawTransaction, Transaction } from '@solana/web3.js';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import base58 from 'bs58';
 import { cache, connection, sha256, simulateRawTransaction, validateTransaction, validateTransfer } from '../../src/core';
-import { cors, rateLimit } from '../../src/middleware';
+import { cors, rateLimit, handleError } from '../../src/middleware';
 
 // Endpoint to pay for transactions with an SPL token transfer
 export default async function (request: NextApiRequest, response: NextApiResponse) {
@@ -11,12 +11,12 @@ export default async function (request: NextApiRequest, response: NextApiRespons
 
     // Deserialize a base58 wire-encoded transaction from the request
     const serialized = request.body?.transaction;
-    if (typeof serialized !== 'string') throw new Error('invalid transaction');
+    if (typeof serialized !== 'string') return handleError(request, response, 'invalid transaction');
     const transaction = Transaction.from(base58.decode(serialized));
 
     // Prevent simple duplicate transactions using a hash of the message
     let key = `transaction/${base58.encode(sha256(transaction.serializeMessage()))}`;
-    if (await cache.get(key)) throw new Error('duplicate transaction');
+    if (await cache.get(key)) return handleError(request, response, 'duplicate transaction');
     await cache.set(key, true);
 
     // Check that the transaction is basically valid, sign it, and serialize it, verifying the signatures
@@ -33,7 +33,7 @@ export default async function (request: NextApiRequest, response: NextApiRespons
        transaction succeeds or fails.
      */
     key = `transfer/${transfer.keys.source.pubkey.toBase58()}`;
-    if (await cache.get(key)) throw new Error('duplicate transfer');
+    if (await cache.get(key)) return handleError(request, response, 'duplicate transfer');
     await cache.set(key, true);
 
     try {

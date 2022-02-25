@@ -159,12 +159,16 @@ if (process.env.TEST_LIVE) {
                           transaction: base58.encode(transaction.serialize({requireAllSignatures: false}))
                       })
                   });
-                  expect(res.status).to.be.equals(500);
+                  expect(res.status).to.be.equals(400);
+                  const message = (await res.json())['message'] as string;
+                  expect(message).to.be.equals('duplicate transaction');
               }
           });
-      })
+      });
 
-      // test of fails
-      // test with arbitrary program call
+      // todo: test for duplicate transfer with creating race condition
+      // todo: test of errors inside validateTransaction and validateTransfer (require some refactoring for error handling)
+      // todo: test with arbitrary program call
+      // todo: test CORS (i remember encountering some problems there)
   });
 }

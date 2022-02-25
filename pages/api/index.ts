@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { ENV_FEE_PAYER, getConfig } from '../../src/core';
-import { rateLimit } from '../../src/middleware';
-//
+import { rateLimit, handleError } from '../../src/middleware';
+
 const body = {
     feePayer: ENV_FEE_PAYER.toBase58(),
     ...getConfig(),

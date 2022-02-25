@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { connection } from '../../src/core';
-import { rateLimit } from '../../src/middleware';
+import { rateLimit, handleError } from '../../src/middleware';
 
 // Endpoint to get the most recent blockhash seen by Octane's RPC node
 export default async function (request: NextApiRequest, response: NextApiResponse) {
