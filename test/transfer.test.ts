@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { testApiHandler } from 'next-test-api-route-handler';
 import {
     Keypair, PublicKey, Connection,
-    Transaction, LAMPORTS_PER_SOL
+    Transaction, sendAndConfirmRawTransaction, LAMPORTS_PER_SOL
 } from '@solana/web3.js';
 import {
     createMint, getOrCreateAssociatedTokenAccount, Account,
@@ -162,6 +162,42 @@ if (process.env.TEST_LIVE) {
                   expect(res.status).to.be.equals(400);
                   const message = (await res.json())['message'] as string;
                   expect(message).to.be.equals('duplicate transaction');
+                  expect((await getAccount(connection, tokenAccount.address, 'confirmed')).amount).to.equal(BigInt(300));
+              }
+          });
+      });
+
+      it('signs a transaction and submits it to the network by signature client-side successfully', async () => {
+          const transaction = new Transaction();
+          transaction.add(createTransferInstruction(sourceAccount, tokenAccount.address, sourceOwner.publicKey, 100));
+          transaction.feePayer = payerKeypair.publicKey;
+          transaction.recentBlockhash = recentBlockhash;
+          transaction.partialSign(sourceOwner);
+
+          await testApiHandler({
+              handler: transfer,
+              test: async ({ fetch }) => {
+                  const res = await fetch({
+                      method: 'POST',
+                      headers: {'Content-Type': 'application/json'},
+                      body: JSON.stringify({
+                          transaction: base58.encode(transaction.serialize({requireAllSignatures: false})),
+                          skipSendAndConfirm: '1',
+                      })
+                  });
+                  expect(res.status).to.be.equals(200);
+                  const signature = (await res.json())['signature'] as string;
+                  expect(signature).to.not.be.empty;
+                  // Transaction shouldn't be sent yet:
+                  expect((await connection.getSignatureStatus(signature)).value).to.be.null;
+                  expect((await getAccount(connection, sourceAccount, 'confirmed')).amount).to.equal(BigInt(5000));
+
+                  transaction.addSignature(payerKeypair.publicKey, base58.decode(signature));
+                  await sendAndConfirmRawTransaction(connection, transaction.serialize(), { commitment: 'confirmed' });
+
+                  expect((await connection.getSignatureStatus(signature)).value!.confirmationStatus).to.be.equals('confirmed');
+                  expect((await getAccount(connection, sourceAccount, 'confirmed')).amount).to.equal(BigInt(4900));
+                  expect((await getAccount(connection, tokenAccount.address, 'confirmed')).amount).to.equal(BigInt(400));
               }
           });
       });

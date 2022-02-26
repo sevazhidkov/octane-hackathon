@@ -14,6 +14,10 @@ export default async function (request: NextApiRequest, response: NextApiRespons
     if (typeof serialized !== 'string') return handleError(request, response, 'invalid transaction');
     const transaction = Transaction.from(base58.decode(serialized));
 
+    // Request params:
+    const skipSendAndConfirmFlag = request.body?.skipSendAndConfirm;
+    const skipSendAndConfirm: boolean = skipSendAndConfirmFlag === '1';
+
     // Prevent simple duplicate transactions using a hash of the message
     let key = `transaction/${base58.encode(sha256(transaction.serializeMessage()))}`;
     if (await cache.get(key)) return handleError(request, response, 'duplicate transaction');
@@ -37,9 +41,15 @@ export default async function (request: NextApiRequest, response: NextApiRespons
     await cache.set(key, true);
 
     try {
-        // Simulate, send, and confirm the transaction
+        // Simulate
         await simulateRawTransaction(rawTransaction);
-        await sendAndConfirmRawTransaction(connection, rawTransaction, { commitment: 'confirmed' });
+        // If a flag is passed, do not send the transaction to network, just return the signature.
+        // It could be helpful if RPC node imposes IP rate limits and allows to clients to send
+        // Octane-signed transactions by themselves through returned signature
+        // Otherwise, send and confirm the transaction.
+        if (!skipSendAndConfirm) {
+            await sendAndConfirmRawTransaction(connection, rawTransaction, { commitment: 'confirmed' });
+        }
     } finally {
         await cache.del(key);
     }
